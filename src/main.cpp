@@ -2,16 +2,25 @@
 #include "HX711.h"
 #include <Wire.h>
 #include <Adafruit_PN532.h>
+#include <U8g2lib.h>
 // HX711 circuit wiring
 const int LOADCELL_DOUT_PIN = 21;
 const int LOADCELL_SCK_PIN = 20;
 
 HX711 scale;
 Adafruit_PN532 nfc(-1, -1);
+U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 
 void setup() {
   Serial.begin(115200);
   Wire.begin(8, 9);
+  //-------------------------
+  u8g2.begin();
+  u8g2.clearBuffer();
+  u8g2.setFont(u8g2_font_helvR08_tr);
+  u8g2.drawStr(0, 20, "Start...");
+  u8g2.sendBuffer();
+  //----------------------
   nfc.begin();
   nfc.SAMConfig();
   scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
