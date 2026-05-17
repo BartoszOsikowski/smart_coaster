@@ -8,6 +8,10 @@ const int LOADCELL_DOUT_PIN = 1;
 const int LOADCELL_SCK_PIN = 0;
 unsigned long rememberedTime = 0;
 unsigned long rememberedRfidTime = 0;
+unsigned long rememberedButtonTime1 = 0;
+unsigned long rememberedButtonTime2 = 0;
+bool lastButtonState1 = HIGH; 
+bool lastButtonState2 = HIGH;
 HX711 scale;
 Adafruit_PN532 nfc(-1, -1);
 U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R2);
@@ -32,12 +36,18 @@ void setup() {
 void loop() {
   unsigned long currentTime = millis();
   //-------buttons
-  if(!digitalRead(20)){
+  bool buttonState1 = digitalRead(20);
+  bool buttonState2 = digitalRead(21);
+  if(buttonState1 == LOW && currentTime - rememberedButtonTime1 > 50 && lastButtonState1 == HIGH){
+    rememberedButtonTime1 = currentTime;
     Serial.println("Button 1 pressed");
   }
-  if(!digitalRead(21)){
+  lastButtonState1 = buttonState1;
+  if(buttonState2 == LOW && currentTime - rememberedButtonTime2 > 50 && lastButtonState2 == HIGH){
+    rememberedButtonTime2 = currentTime;
     Serial.println("Button 2 pressed");
   }
+  lastButtonState2 = buttonState2;
   
 
   //-------------- NFC
