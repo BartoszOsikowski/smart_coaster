@@ -6,7 +6,8 @@
 // HX711 circuit wiring
 const int LOADCELL_DOUT_PIN = 1;
 const int LOADCELL_SCK_PIN = 0;
-
+unsigned long rememberedTime = 0;
+unsigned long rememberedRfidTime = 0;
 HX711 scale;
 Adafruit_PN532 nfc(-1, -1);
 U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R2);
@@ -29,6 +30,7 @@ void setup() {
 }
 
 void loop() {
+  unsigned long currentTime = millis();
   //-------buttons
   if(!digitalRead(20)){
     Serial.println("Button 1 pressed");
@@ -36,24 +38,34 @@ void loop() {
   if(!digitalRead(21)){
     Serial.println("Button 2 pressed");
   }
-  //-------display
-  u8g2.clearBuffer();
-  u8g2.drawStr(0,20,"Hello World!");
-  u8g2.sendBuffer();
+  
 
   //-------------- NFC
-  uint8_t success;
-  uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 }; 
-  uint8_t uidLength;   
-  success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength, 50);
+  if(currentTime - rememberedRfidTime >= 250) {
+    rememberedRfidTime = currentTime; 
 
-  if(success){
-    Serial.print("UID value:");
-    nfc.PrintHex(uid, uidLength);
+    uint8_t success;
+    uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 }; 
+    uint8_t uidLength;   
+    
+    success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength, 100);
+
+    if(success){
+      Serial.print("UID value: ");
+      nfc.PrintHex(uid, uidLength);
+    }
   }
-  //--------------- HX711
-  Serial.println("Odczyty z belki:");
-  Serial.println(scale.get_units(10), 1);
-  delay(10);
-  
+  if(currentTime - rememberedTime > 1000) {
+    rememberedTime = currentTime;
+    //--------------- HX711
+    float weight = scale.get_units(1);
+    Serial.println("Readings from HX711:");
+    Serial.println(weight);
+    //-------display
+    u8g2.clearBuffer();
+    u8g2.setCursor(0,25);
+    u8g2.print(weight, 0);
+    u8g2.sendBuffer();
+    
+  }
 }
