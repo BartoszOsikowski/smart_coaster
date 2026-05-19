@@ -12,6 +12,9 @@ unsigned long rememberedButtonTime1 = 0;
 unsigned long rememberedButtonTime2 = 0;
 bool lastButtonState1 = HIGH; 
 bool lastButtonState2 = HIGH;
+int currentDisplay = 0;
+int dailyFluid = 750;
+int dailyFluidSet = 1000;
 HX711 scale;
 Adafruit_PN532 nfc(-1, -1);
 U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R2);
@@ -21,7 +24,7 @@ void setup() {
   Wire.begin(8, 9);
   nfc.begin();
   u8g2.begin();
-  u8g2.setFont(u8g2_font_ncenB14_tr);
+  u8g2.setFont(u8g2_font_profont12_tr);
   
   scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
   scale.set_scale(-638.0f);
@@ -40,7 +43,7 @@ void loop() {
   bool buttonState2 = digitalRead(21);
   if(buttonState1 == LOW && currentTime - rememberedButtonTime1 > 50 && lastButtonState1 == HIGH){
     rememberedButtonTime1 = currentTime;
-    Serial.println("Button 1 pressed");
+    
   }
   lastButtonState1 = buttonState1;
   if(buttonState2 == LOW && currentTime - rememberedButtonTime2 > 50 && lastButtonState2 == HIGH){
@@ -73,8 +76,20 @@ void loop() {
     Serial.println(weight);
     //-------display
     u8g2.clearBuffer();
-    u8g2.setCursor(0,25);
-    u8g2.print(weight, 0);
+    u8g2.drawFrame(2,2,20,30);
+    
+    u8g2.drawBox(2,32-((30*dailyFluid)/dailyFluidSet),20,(30*dailyFluid)/dailyFluidSet);
+    u8g2.setCursor(25,30);
+
+    u8g2.print("Wypito: ");
+    u8g2.print(dailyFluid);
+    u8g2.print(" ml");
+    u8g2.setCursor(25,20);
+    u8g2.print("Waga: ");
+    u8g2.print(weight);
+    u8g2.print(" g");
+    //u8g2.setCursor(0,25);
+    //u8g2.print(weight, 0);
     u8g2.sendBuffer();
     
   }
