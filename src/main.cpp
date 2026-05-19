@@ -13,7 +13,8 @@ unsigned long rememberedButtonTime2 = 0;
 bool lastButtonState1 = HIGH; 
 bool lastButtonState2 = HIGH;
 int currentDisplay = 0;
-int dailyFluid = 750;
+int currentOption = 0;
+int dailyFluid = 1500;
 int dailyFluidSet = 1000;
 HX711 scale;
 Adafruit_PN532 nfc(-1, -1);
@@ -41,15 +42,40 @@ void loop() {
   //-------buttons
   bool buttonState1 = digitalRead(20);
   bool buttonState2 = digitalRead(21);
-  if(buttonState1 == LOW && currentTime - rememberedButtonTime1 > 50 && lastButtonState1 == HIGH){
+  if(buttonState1 == LOW && currentTime - rememberedButtonTime1 > 200 && lastButtonState1 == HIGH){
     rememberedButtonTime1 = currentTime;
+    if(currentOption == 2){
+      dailyFluidSet += 100;
+      if(dailyFluidSet >= 2000){
+        dailyFluidSet = 500;
+      }
+    }
+    else {
+      currentDisplay++;
+      if(currentDisplay > 2){
+        currentDisplay = 0;
+      }
+      currentOption = 0;
+      rememberedTime = 0;
+    }
+    
     
   }
   lastButtonState1 = buttonState1;
-  if(buttonState2 == LOW && currentTime - rememberedButtonTime2 > 50 && lastButtonState2 == HIGH){
+  if(buttonState2 == LOW && currentTime - rememberedButtonTime2 > 200 && lastButtonState2 == HIGH){
     rememberedButtonTime2 = currentTime;
-    Serial.println("Button 2 pressed");
+    if(currentOption == 2){
+      currentOption = 0;
+    }
+    else if(currentDisplay == 1){
+      currentOption = 1;
+    }
+    else if(currentDisplay == 2){
+      currentOption = 2;
+    }
+    rememberedTime = 0;
   }
+  
   lastButtonState2 = buttonState2;
   
 
@@ -76,9 +102,15 @@ void loop() {
     Serial.println(weight);
     //-------display
     u8g2.clearBuffer();
-    u8g2.drawFrame(2,2,20,30);
+    if(currentDisplay == 0){
+      u8g2.drawFrame(2,2,20,30);
+    if(dailyFluid >= dailyFluidSet){
+      u8g2.drawBox(2,2,20,30);
+    }
+    else{
+      u8g2.drawBox(2,32-((30*dailyFluid)/dailyFluidSet),20,(30*dailyFluid)/dailyFluidSet);
+    }
     
-    u8g2.drawBox(2,32-((30*dailyFluid)/dailyFluidSet),20,(30*dailyFluid)/dailyFluidSet);
     u8g2.setCursor(25,30);
 
     u8g2.print("Wypito: ");
@@ -88,8 +120,32 @@ void loop() {
     u8g2.print("Waga: ");
     u8g2.print(weight);
     u8g2.print(" g");
-    //u8g2.setCursor(0,25);
-    //u8g2.print(weight, 0);
+    }
+    else if(currentDisplay == 1){
+      if(currentOption == 1){
+        u8g2.setCursor(0, 15);
+        u8g2.print("Trwa konfiguracja");
+      }
+      else {
+        u8g2.setCursor(0, 15);
+        u8g2.print("Konfiguracja kubka");
+      }
+      
+    }
+    else if(currentDisplay == 2){
+      if(currentOption == 2){
+        u8g2.setCursor(0,15);
+        u8g2.print("Cel: ");
+        u8g2.print(dailyFluidSet);
+        u8g2.print(" ml");
+      }
+      else
+      {
+        u8g2.setCursor(0, 15);
+        u8g2.print("Ustaw inne limity");
+      }
+    }
+    
     u8g2.sendBuffer();
     
   }
