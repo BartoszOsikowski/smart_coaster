@@ -16,8 +16,8 @@ bool lastButtonState1 = HIGH;
 bool lastButtonState2 = HIGH;
 int currentDisplay = 0;
 int currentOption = 0;
-int dailyFluid = 1500;
-int dailyFluidSet = 1000;
+int dailyFluid = 0; 
+int dailyFluidSet = 1000; 
 
 String UID = "";
 float savedWeight;
@@ -55,35 +55,24 @@ void loop() {
   //-------buttons
   bool buttonState1 = digitalRead(20);
   bool buttonState2 = digitalRead(21);
+  
+  
   if(buttonState1 == LOW && currentTime - rememberedButtonTime1 > 200 && lastButtonState1 == HIGH){
     rememberedButtonTime1 = currentTime;
-    if(currentOption == 2){
-      dailyFluidSet += 100;
-      if(dailyFluidSet >= 2000){
-        dailyFluidSet = 500;
-      }
+    currentDisplay++;
+    if(currentDisplay > 1){ 
+      currentDisplay = 0;
     }
-    else {
-      currentDisplay++;
-      if(currentDisplay > 2){
-        currentDisplay = 0;
-      }
-      currentOption = 0;
-      rememberedTime = 0;
-    }
+    currentOption = 0;
+    rememberedTime = 0;
   }
   lastButtonState1 = buttonState1;
   
+  
   if(buttonState2 == LOW && currentTime - rememberedButtonTime2 > 200 && lastButtonState2 == HIGH){
     rememberedButtonTime2 = currentTime;
-    if(currentOption == 2){
-      currentOption = 0;
-    }
-    else if(currentDisplay == 1){
+    if(currentDisplay == 1){
       currentOption = 1;
-    }
-    else if(currentDisplay == 2){
-      currentOption = 2;
     }
     rememberedTime = 0;
   }
@@ -182,19 +171,6 @@ void loop() {
       else {
         u8g2.setCursor(0, 15);
         u8g2.print("Konfiguracja kubka");
-      }
-    }
-    else if(currentDisplay == 2){
-      if(currentOption == 2){
-        u8g2.setCursor(0,15);
-        u8g2.print("Cel: ");
-        u8g2.print(dailyFluidSet);
-        u8g2.print(" ml");
-      }
-      else
-      {
-        u8g2.setCursor(0, 15);
-        u8g2.print("Ustaw inne limity");
       }
     }
     
